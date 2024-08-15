@@ -22,6 +22,7 @@ type Settings struct {
 	Log           Log
 	PublicIP      PublicIP
 	Shadowsocks   Shadowsocks
+	Storage       StorageSettings
 	System        System
 	Updater       Updater
 	Version       Version
@@ -46,6 +47,7 @@ func (s *Settings) Validate(storage Storage, ipv6Supported bool) (err error) {
 		"log":             s.Log.validate,
 		"public ip check": s.PublicIP.validate,
 		"shadowsocks":     s.Shadowsocks.validate,
+		"storage":         s.Storage.validate,
 		"system":          s.System.validate,
 		"updater":         s.Updater.Validate,
 		"version":         s.Version.validate,
@@ -75,6 +77,7 @@ func (s *Settings) copy() (copied Settings) {
 		Log:           s.Log.copy(),
 		PublicIP:      s.PublicIP.copy(),
 		Shadowsocks:   s.Shadowsocks.copy(),
+		Storage:       s.Storage.copy(),
 		System:        s.System.copy(),
 		Updater:       s.Updater.copy(),
 		Version:       s.Version.copy(),
@@ -94,6 +97,7 @@ func (s *Settings) OverrideWith(other Settings,
 	patchedSettings.Log.overrideWith(other.Log)
 	patchedSettings.PublicIP.overrideWith(other.PublicIP)
 	patchedSettings.Shadowsocks.overrideWith(other.Shadowsocks)
+	patchedSettings.Storage.overrideWith(other.Storage)
 	patchedSettings.System.overrideWith(other.System)
 	patchedSettings.Updater.overrideWith(other.Updater)
 	patchedSettings.Version.overrideWith(other.Version)
@@ -116,6 +120,7 @@ func (s *Settings) SetDefaults() {
 	s.Log.setDefaults()
 	s.PublicIP.setDefaults()
 	s.Shadowsocks.setDefaults()
+	s.Storage.setDefaults()
 	s.System.setDefaults()
 	s.Version.setDefaults()
 	s.VPN.setDefaults()
@@ -138,6 +143,7 @@ func (s Settings) toLinesNode() (node *gotree.Node) {
 	node.AppendNode(s.Shadowsocks.toLinesNode())
 	node.AppendNode(s.HTTPProxy.toLinesNode())
 	node.AppendNode(s.ControlServer.toLinesNode())
+	node.AppendNode(s.Storage.toLinesNode())
 	node.AppendNode(s.System.toLinesNode())
 	node.AppendNode(s.PublicIP.toLinesNode())
 	node.AppendNode(s.Updater.toLinesNode())
@@ -187,6 +193,7 @@ func (s *Settings) Read(r *reader.Reader) (err error) {
 		"log":            s.Log.read,
 		"public ip":      s.PublicIP.read,
 		"shadowsocks":    s.Shadowsocks.read,
+		"storage":        s.Storage.read,
 		"system":         s.System.read,
 		"updater":        s.Updater.read,
 		"version":        s.Version.read,
