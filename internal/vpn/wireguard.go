@@ -17,7 +17,8 @@ func setupWireguard(ctx context.Context, netlinker NetLinker,
 	fw Firewall, providerConf provider.Provider,
 	settings settings.VPN, ipv6Supported bool, logger wireguard.Logger) (
 	wireguarder *wireguard.Wireguard, serverName string, canPortForward bool, err error) {
-	connection, err := providerConf.GetConnection(settings.Provider.ServerSelection, ipv6Supported)
+	// HACK(jfroy): do not use IPv6 endpoints
+	connection, err := providerConf.GetConnection(settings.Provider.ServerSelection, false)
 	if err != nil {
 		return nil, "", false, fmt.Errorf("finding a VPN server: %w", err)
 	}
