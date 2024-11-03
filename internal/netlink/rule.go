@@ -4,6 +4,7 @@ package netlink
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vishvananda/netlink"
 )
@@ -40,10 +41,15 @@ func (n *NetLink) RuleList(family int) (rules []Rule, err error) {
 	return rules, nil
 }
 
-func (n *NetLink) RuleAdd(rule Rule) error {
+func (n *NetLink) RuleAdd(rule Rule) (err error) {
 	n.debugLogger.Debug(ruleDbgMsg(true, rule))
 	netlinkRule := ruleToNetlinkRule(rule)
-	return netlink.RuleAdd(&netlinkRule)
+	err = netlink.RuleAdd(&netlinkRule)
+	if err != nil && strings.HasSuffix(err.Error(), "file exists") {
+		// See https://github.com/qdm12/gluetun/issues/2521
+		return nil
+	}
+	return err
 }
 
 func (n *NetLink) RuleDel(rule Rule) error {
