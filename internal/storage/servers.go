@@ -26,10 +26,11 @@ func (s *Storage) SetServers(provider string, servers []models.Server) (err erro
 	serversObject.Servers = servers
 	s.mergedServers.ProviderToServers[provider] = serversObject
 
-	err = s.flushToFile(s.filepath)
+	err = s.flushToFile(s.filepath, nil)
 	if err != nil {
 		return fmt.Errorf("saving servers to file: %w", err)
 	}
+
 	return nil
 }
 

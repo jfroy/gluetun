@@ -15,6 +15,7 @@ type Storage struct {
 	hardcodedServers models.AllServers
 	logger           Infoer
 	filepath         string
+	updateFilepath   string
 }
 
 type Infoer interface {
@@ -24,7 +25,7 @@ type Infoer interface {
 // New creates a new storage and reads the servers from the
 // embedded servers file and the file on disk.
 // Passing an empty filepath disables writing servers to a file.
-func New(logger Infoer, filepath string) (storage *Storage, err error) {
+func New(logger Infoer, filepath string, updateFilepath string) (storage *Storage, err error) {
 	// A unit test prevents any error from being returned
 	// and ensures all providers are part of the servers returned.
 	hardcodedServers, _ := parseHardcodedServers()
@@ -33,6 +34,7 @@ func New(logger Infoer, filepath string) (storage *Storage, err error) {
 		hardcodedServers: hardcodedServers,
 		logger:           logger,
 		filepath:         filepath,
+		updateFilepath:   updateFilepath,
 	}
 
 	if err := storage.syncServers(); err != nil {
