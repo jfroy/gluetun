@@ -14,7 +14,7 @@ func countServers(allServers models.AllServers) (count int) {
 	return count
 }
 
-// syncServers merges the hardcoded servers with the ones from the file.
+// syncServers merges the hardcoded servers with the ones from the files.
 func (s *Storage) syncServers() (err error) {
 	hardcodedVersions := make(map[string]uint16, len(s.hardcodedServers.ProviderToServers))
 	for provider, servers := range s.hardcodedServers.ProviderToServers {
@@ -34,25 +34,32 @@ func (s *Storage) syncServers() (err error) {
 
 	if countOnFile == 0 {
 		s.logger.Info(fmt.Sprintf(
-			"creating %s with %d hardcoded servers",
+			"initializing storage %s with %d hardcoded servers",
 			s.filepath, hardcodedCount))
 		s.mergedServers = s.hardcodedServers
 	} else {
 		s.logger.Info(fmt.Sprintf(
 			"merging by most recent %d hardcoded servers and %d servers read from %s",
 			hardcodedCount, countOnFile, s.filepath))
-
 		s.mergedServers = s.mergeServers(s.hardcodedServers, serversOnFile)
 	}
 
-	// Eventually write file
-	if s.filepath == "" || reflect.DeepEqual(serversOnFile, s.mergedServers) {
-		return nil
+	// If the on-disk servers are stale, update the file. This will do nothing if filepath is empty.
+	if !reflect.DeepEqual(serversOnFile, s.mergedServers) {
+		err = s.flushToFile(s.filepath, nil)
+		if err != nil {
+			return fmt.Errorf("writing servers to file: %w", err)
+		}
 	}
 
-	err = s.flushToFile(s.filepath)
+	// Update the merged servers with the servers update file.
+	serversUpdateFile, err := s.readFromFile(s.updateFilepath, hardcodedVersions)
 	if err != nil {
-		return fmt.Errorf("writing servers to file: %w", err)
+		return fmt.Errorf("failed to read update servers file: %w", err)
 	}
+	if countServers(serversUpdateFile) > 0 {
+		s.mergedServers = s.mergeServers(s.mergedServers, serversUpdateFile)
+	}
+
 	return nil
 }

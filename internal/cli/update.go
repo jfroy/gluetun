@@ -19,6 +19,7 @@ import (
 	"github.com/qdm12/gluetun/internal/updater"
 	"github.com/qdm12/gluetun/internal/updater/resolver"
 	"github.com/qdm12/gluetun/internal/updater/unzip"
+	"github.com/qdm12/gosettings/reader"
 )
 
 var (
@@ -32,17 +33,20 @@ type UpdaterLogger interface {
 	Error(s string)
 }
 
-func (c *CLI) Update(ctx context.Context, args []string, logger UpdaterLogger) error {
+func (c *CLI) Update(ctx context.Context, args []string, logger UpdaterLogger, reader *reader.Reader) error {
 	options := settings.Updater{}
+	options.SetDefaults(providers.Custom)
+	_ = options.Read(reader)
+
 	var endUserMode, maintainerMode, updateAll bool
-	var csvProviders, ipToken string
+	var minRatio float64
+	var csvProviders, dnsAddress, ipToken string
 	flagSet := flag.NewFlagSet("update", flag.ExitOnError)
 	flagSet.BoolVar(&endUserMode, "enduser", false, "Write results to /gluetun/servers.json (for end users)")
 	flagSet.BoolVar(&maintainerMode, "maintainer", false,
 		"Write results to ./internal/storage/servers.json to modify the program (for maintainers)")
-	flagSet.StringVar(&options.DNSAddress, "dns", "8.8.8.8", "DNS resolver address to use")
-	const defaultMinRatio = 0.8
-	flagSet.Float64Var(&options.MinRatio, "minratio", defaultMinRatio,
+	flagSet.StringVar(&dnsAddress, "dns", "8.8.8.8", "DNS resolver address to use")
+	flagSet.Float64Var(&minRatio, "minratio", 0,
 		"Minimum ratio of servers to find for the update to succeed")
 	flagSet.BoolVar(&updateAll, "all", false, "Update servers for all VPN providers")
 	flagSet.StringVar(&csvProviders, "providers", "", "CSV string of VPN providers to update server data for")
@@ -58,20 +62,26 @@ func (c *CLI) Update(ctx context.Context, args []string, logger UpdaterLogger) e
 	if updateAll {
 		options.Providers = providers.All()
 	} else {
-		if csvProviders == "" {
+		if csvProviders != "" {
+			options.Providers = strings.Split(csvProviders, ",")
+		} else if len(options.Providers) == 0 {
 			return fmt.Errorf("%w", ErrNoProviderSpecified)
 		}
-		options.Providers = strings.Split(csvProviders, ",")
 	}
 
-	options.SetDefaults(options.Providers[0])
+	if dnsAddress != "" {
+		options.DNSAddress = dnsAddress
+	}
+	if minRatio != 0 {
+		options.MinRatio = minRatio
+	}
 
 	err := options.Validate()
 	if err != nil {
 		return fmt.Errorf("options validation failed: %w", err)
 	}
 
-	storage, err := storage.New(logger, constants.ServersData)
+	storage, err := storage.New(logger, "", "")
 	if err != nil {
 		return fmt.Errorf("creating servers storage: %w", err)
 	}
@@ -102,8 +112,15 @@ func (c *CLI) Update(ctx context.Context, args []string, logger UpdaterLogger) e
 		return fmt.Errorf("updating server information: %w", err)
 	}
 
+	if endUserMode {
+		err := storage.FlushToFile(constants.ServersUpdateData, options.Providers)
+		if err != nil {
+			return fmt.Errorf("writing servers data to embedded JSON file: %w", err)
+		}
+	}
+
 	if maintainerMode {
-		err := storage.FlushToFile(c.repoServersPath)
+		err := storage.FlushToFile(c.repoServersPath, nil)
 		if err != nil {
 			return fmt.Errorf("writing servers data to embedded JSON file: %w", err)
 		}

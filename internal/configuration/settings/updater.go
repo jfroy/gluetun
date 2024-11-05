@@ -107,7 +107,7 @@ func (u Updater) toLinesNode() (node *gotree.Node) {
 	return node
 }
 
-func (u *Updater) read(r *reader.Reader) (err error) {
+func (u *Updater) Read(r *reader.Reader) (err error) {
 	u.Period, err = r.DurationPtr("UPDATER_PERIOD")
 	if err != nil {
 		return err

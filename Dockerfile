@@ -209,6 +209,7 @@ ENV VPN_SERVICE_PROVIDER=pia \
     PUBLICIP_API_TOKEN= \
     # Storage
     STORAGE_FILEPATH=/gluetun/servers.json \
+    STORAGE_UPDATE_FILEPATH=/gluetun/servers-update.json \
     # Pprof
     PPROF_ENABLED=no \
     PPROF_BLOCK_PROFILE_RATE=0 \

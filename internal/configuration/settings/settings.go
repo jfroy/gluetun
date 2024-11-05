@@ -205,7 +205,7 @@ func (s *Settings) Read(r *reader.Reader, warner Warner) (err error) {
 		"shadowsocks": s.Shadowsocks.read,
 		"storage":     s.Storage.read,
 		"system":      s.System.read,
-		"updater":     s.Updater.read,
+		"updater":     s.Updater.Read,
 		"version":     s.Version.read,
 		"VPN":         s.VPN.read,
 		"profiling":   s.Pprof.Read,

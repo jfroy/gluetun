@@ -81,7 +81,7 @@ func (c *CLI) FormatServers(args []string) error {
 	}
 
 	logger := newNoopLogger()
-	storage, err := storage.New(logger, constants.ServersData)
+	storage, err := storage.New(logger, constants.ServersData, constants.ServersUpdateData)
 	if err != nil {
 		return fmt.Errorf("creating servers storage: %w", err)
 	}

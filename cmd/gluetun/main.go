@@ -156,7 +156,7 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		case "openvpnconfig":
 			return cli.OpenvpnConfig(logger, reader, netLinker)
 		case "update":
-			return cli.Update(ctx, args[2:], logger)
+			return cli.Update(ctx, args[2:], logger, reader)
 		case "format-servers":
 			return cli.FormatServers(args[2:])
 		case "genkey":
@@ -239,7 +239,7 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 
 	// TODO run this in a loop or in openvpn to reload from file without restarting
 	storageLogger := logger.New(log.SetComponent("storage"))
-	storage, err := storage.New(storageLogger, *allSettings.Storage.Filepath)
+	storage, err := storage.New(storageLogger, *allSettings.Storage.Filepath, *allSettings.Storage.UpdateFilepath)
 	if err != nil {
 		return err
 	}
@@ -589,7 +589,7 @@ type clier interface {
 	FormatServers(args []string) error
 	OpenvpnConfig(logger cli.OpenvpnConfigLogger, reader *reader.Reader, ipv6Checker cli.IPv6Checker) error
 	HealthCheck(ctx context.Context, reader *reader.Reader, warner cli.Warner) error
-	Update(ctx context.Context, args []string, logger cli.UpdaterLogger) error
+	Update(ctx context.Context, args []string, logger cli.UpdaterLogger, reader *reader.Reader) error
 	GenKey(args []string) error
 }
 
