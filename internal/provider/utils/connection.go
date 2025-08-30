@@ -50,7 +50,7 @@ func GetConnection(provider string,
 	connections := make([]models.Connection, 0, len(servers))
 	for _, server := range servers {
 		for _, ip := range server.IPs {
-			if !ipv6Supported && ip.Is6() {
+			if ip.Is6() {
 				continue
 			}
 
