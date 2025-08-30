@@ -127,6 +127,7 @@ func Test_GetConnection(t *testing.T) {
 					UDP: true,
 					IPs: []netip.Addr{
 						netip.AddrFrom4([4]byte{1, 1, 1, 1}),
+						// All IPv6 is ignored, even when supported
 						netip.IPv6Unspecified(),
 					},
 				},
@@ -138,7 +139,7 @@ func Test_GetConnection(t *testing.T) {
 			randSource:    rand.NewSource(0),
 			connections: []models.Connection{{
 				Type:     vpn.OpenVPN,
-				IP:       netip.IPv6Unspecified(),
+				IP:       netip.AddrFrom4([4]byte{1, 1, 1, 1}),
 				Protocol: constants.UDP,
 				Port:     1194,
 			}},
